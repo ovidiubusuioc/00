@@ -1,0 +1,152 @@
+Schimbari:
+1.ClientPeer
+   - implements Runnable
+   - private final Socket socket; 
+   - this.socket = communicationSocket; // in public ClientPeer
+   -     @Override
+         public void run() { // metoda pentru thread
+         try {
+            ObjectInputStream stream = new ObjectInputStream(this.socket.getInputStream());
+            while (true) {
+                System.out.println(stream.readObject().toString().trim());
+            }
+        } catch (IOException | ClassNotFoundException e) {
+
+        }
+    }
+
+2.ServerPeer
+public class ServerPeer implements Runnable {
+
+    private final Socket mSocket;
+    private String username;
+    private Server server;
+    private ObjectOutputStream objectStream;
+
+    public ServerPeer(Server server, Socket communicationSocket) {
+        this.mSocket = communicationSocket;
+        this.server = server;
+        try {
+            this.objectStream = new ObjectOutputStream(mSocket.getOutputStream());
+        } catch(IOException e) {
+
+        }
+    }
+
+    @Override
+    public void run() {
+        Message mesaj;
+        try {
+            ObjectInputStream stream = new ObjectInputStream(mSocket.getInputStream());
+
+            while (true) {
+                mesaj = (Message) stream.readObject();
+                username = mesaj.getSender(); // de fiecare data cand primesti mesaj se updateaza usernameul
+                System.out.println(mesaj.toString().trim());
+                if(mesaj instanceof PrivateMessage) {
+                    sendMessage(mesaj);
+                    server.dispatch(mesaj); // trimite mesaju la toata lumea
+                } else {
+                    server.dispatch(mesaj);
+                }
+            }
+        } catch (EOFException ex) {
+            // client disconnected gracefully so do nothing
+            server.removeClient(this); // scoate clientu din lista
+        } catch (IOException ex) {
+            server.removeClient(this);
+            System.err.println("Client connection reset: " + ex.getMessage());
+        } catch (ClassNotFoundException ex) {
+            System.err.println("Unknown object received.");
+        }
+    }
+
+    private void sendMessage(Message mesaj) {
+        try {
+            objectStream.writeObject(mesaj); // serializeaza mesajul si il trimite catre socket
+        } catch(IOException e) {
+
+        }
+    }
+
+    public Socket getmSocket() {
+        return this.mSocket;
+    }
+
+    public String getUsername() { //this is pretty obv as well
+        return this.username;
+    }
+
+    public ObjectOutputStream getObjectStream() {
+        return this.objectStream;
+    }
+}
+
+3.Server
+public class Server {
+
+    public ArrayList<ServerPeer> clientList = new ArrayList<>();
+    private ServerSocket serverSocket;
+    private final int MAX_CLIENTS;
+
+    public Server(int TCP_PORT, int MAX_CLIENTS) { // constructor care instantiaza obiectul serversocket
+        try {
+            this.serverSocket = new ServerSocket(TCP_PORT);
+        } catch(IOException e) {
+
+        }
+        this.MAX_CLIENTS = MAX_CLIENTS;
+    }
+
+    public static void main(String[] args) {
+        try {
+            ServerConfig config = new ServerConfig();
+            Server server = new Server(config.getTcpPort(), config.getMaxClients());
+            server.listen(server);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void listen(Server server) throws IOException {
+        while(true) { // atata timp cat traieste serveru primeste conexiuni noi
+            if(clientList.size() <= this.MAX_CLIENTS) { // atata timp cat mai e loc de conexiuni
+                ServerPeer peer = new ServerPeer(server, serverSocket.accept());
+                clientList.add(peer); // tinem minte fiecare client conectat la server ( socketul lui )
+                (new Thread(peer)).start(); // pornim thread pt serverpeer in loc sa-i dam numai run
+            }
+        }
+    }
+
+    public synchronized void dispatch(Message mesaj) {
+        for(ServerPeer peer : clientList) {
+            if(mesaj instanceof PrivateMessage) {
+                if(peer.getUsername().equals(((PrivateMessage) mesaj).getRecipient())) {
+                    try {
+                        ObjectOutputStream objectStream = peer.getObjectStream();
+                        objectStream.writeObject(mesaj);
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                try {
+                    ObjectOutputStream objectStream = peer.getObjectStream();
+                    objectStream.writeObject(mesaj);
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
+
+    public synchronized void removeClient(ServerPeer serverPeer) {
+        clientList.remove(serverPeer);
+    }
+}
+
+4.Message
+    public String getSender() { 
+        return this.mSender;
+    }
