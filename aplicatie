@@ -1,0 +1,62 @@
+=========CLASA CUVANT =====================
+
+public class Cuvant {
+    int numarVocale;
+    String cuvantCitit;
+
+    public Cuvant() {
+        this.numarVocale = numarVocale;
+        this.cuvantCitit = cuvantCitit;
+    }
+
+}
+
+
+===========CLASA SORTAREDUPAVOCALE====================
+import java.util.Scanner;
+
+public class SortareDupaVocale {
+
+
+    public static void main(String[] args){
+
+        String cuvantCitit = "";
+        int count;
+        char[] litere;
+        Scanner scanner = new Scanner(System.in);
+        int n = scanner.nextInt();
+        Cuvant[] cuvinte = new Cuvant[n];
+        for(int i=0;i<n;i++){
+            cuvinte[i] = new Cuvant();
+        }
+        for(int i=0;i<n;i++){
+            count = 0;
+            if(scanner.hasNext()){
+                cuvantCitit = scanner.next();
+            }
+            cuvinte[i].cuvantCitit = cuvantCitit;
+            litere = cuvantCitit.toCharArray();
+            for(int j=0;j<litere.length;j++){
+                if(litere[j]=='a' || litere[j]=='e' || litere[j]=='i' || litere[j]=='o' || litere[j]=='u'){
+                    count++;
+                }
+            }
+            cuvinte[i].numarVocale=count;
+        }
+        Cuvant aux = new Cuvant();
+        for(int i=0;i<cuvinte.length-1;i++) {
+            for (int j = i+1; j < cuvinte.length; j++) {
+                if (cuvinte[i].numarVocale < cuvinte[j].numarVocale) {
+                    aux = cuvinte[i];
+                    cuvinte[i] = cuvinte[j];
+                    cuvinte[j] = aux;
+                }
+            }
+        }
+        for(int i=0; i<cuvinte.length; i++){
+            System.out.println(cuvinte[i].numarVocale + "  " + cuvinte[i].cuvantCitit + "\n");
+        }
+
+
+    }
+}
