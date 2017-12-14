@@ -1,0 +1,57 @@
+import java.util.Scanner;
+
+class Concurent{
+    int pi;
+    int vi;
+    float timp;
+}
+
+public class Autostrada {
+    public static void main(String args[]){
+        Scanner scanner = new Scanner(System.in);
+        int n=0, k=0;
+        if(scanner.hasNextInt()){
+            n = scanner.nextInt();
+        }
+        if(scanner.hasNextInt()){
+            k = scanner.nextInt();
+        }
+        Concurent[] concurents = new Concurent[k];
+        for(int i=0;i<k;i++){
+            concurents[i] = new Concurent();
+        }
+        scanner.nextLine();
+        for(int i=0;i<k;i++){
+            int pi = 0, vi=0;
+            if(scanner.hasNextInt()){
+                concurents[i].pi = scanner.nextInt();
+                concurents[i].vi = scanner.nextInt();
+            }
+            concurents[i].timp = (float) (n-concurents[i].pi)/concurents[i].vi;
+        }
+        float min = concurents[0].timp;
+        for(int i=0;i<k;i++){
+            if(concurents[i].timp < min){
+                min = concurents[i].timp;
+            }
+        }
+        for(int i=0;i<k;i++){
+            if(concurents[i].timp == min){
+                System.out.print(i+1+" ");
+            }
+        }
+
+
+    }
+}
+
+
+//Daca nu trece testele inlocuiesti de la linia 38 pana la linia 42 cu secventa urmatoare:
+String afisare ="";
+for(int i=0;i<k;i++){
+     if(concurents[i].timp == min){
+       afisare = afisare + (i+1) + " ";
+     }
+}
+afisare = afisare.substring(0,afisare.length()-1);
+        System.out.println(afisare);
